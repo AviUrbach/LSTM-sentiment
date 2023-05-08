@@ -60,9 +60,9 @@ def main():
     hidden_dim = 50
     # binary cross entropy
     output_size = 1
-    num_epoches = 16
+    num_epoches = 4
     ## please change the learning rate by youself
-    learning_rate = 0.001
+    learning_rate = 0.002
     # gradient clipping
     clip = 5
     load_cpt = False #True
