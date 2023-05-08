@@ -18,6 +18,8 @@ from LSTM import LSTMModel
 from GloveEmbed import _get_embedding
 import time
 
+import wandb
+
 
 '''save checkpoint'''
 def _save_checkpoint(ckp_path, model, epoches, global_step, optimizer):
@@ -46,21 +48,21 @@ def main():
     ## ---------------------------------------------------------
     mode = 'train'
     Batch_size =300
-    n_layers = 1 ## choose 1-3 layers
+    n_layers = 2 ## choose 1-3 layers
 
     ## input seq length aligned with data pre-processing
     input_len = 150
 
     ## word embedding length
-    embedding_dim = 50
+    embedding_dim = 100
 
     # lstm hidden dim
     hidden_dim = 50
     # binary cross entropy
     output_size = 1
-    num_epoches = 1
+    num_epoches = 16
     ## please change the learning rate by youself
-    learning_rate = 0.002
+    learning_rate = 0.001
     # gradient clipping
     clip = 5
     load_cpt = False #True
@@ -161,6 +163,9 @@ def main():
                 ## **clip_grad_norm helps prevent the exploding gradient problem in LSTMs.
                 nn.utils.clip_grad_norm_(model.parameters(), clip)
                 optimizer.step()
+
+                if global_step % 3 == 0:
+                    wandb.log({'iteration': global_step, 'loss': loss})
                 
             ##-----------------------------------------------   
             ## step 9: complete code below to save checkpoint
@@ -177,7 +182,10 @@ def main():
     print("----model testing now----")
 
     total = 0
-    correct = 0
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
 
     model.eval()
     with torch.no_grad():
@@ -189,14 +197,23 @@ def main():
             
             # count total predictions and correct predictions
             total += len(y_labels)
-            correct += len(y_pred) - (y_labels-y_pred).count_nonzero().item()
-        print("Testing Accuracy:", correct/total)
+            tp += (y_labels * y_pred).count_nonzero().item()
+            tn += len(y_pred) - (y_labels + y_pred).count_nonzero().item()
+            fp += len(y_pred) - (y_labels - y_pred + 1).count_nonzero().item()
+            fn += len(y_pred) - (y_labels - y_pred - 1).count_nonzero().item()
+        print("Testing Accuracy:", (tp+tn)/total)
+        print("Confusion Matrix:")
+        print("Actual\t Predict")
+        print("\tPos\tNeg")
+        print(f'Pos\t{tp}\t{fn}')
+        print(f'Neg\t{fp}\t{tn}')
     
 
 
 if __name__ == '__main__':
     time_start = time.time()
-    main()
+    with wandb.init(project='aviurbach', name='sentiment_LSTM'):
+        main()
     time_end = time.time()
     print("running time: ", (time_end - time_start)/60.0, "mins")
     

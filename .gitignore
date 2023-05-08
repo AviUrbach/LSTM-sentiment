@@ -7,3 +7,4 @@
 *.pt
 checkpoint/
 __pycache__/
+wandb/
