@@ -14,7 +14,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader,Dataset,TensorDataset
 # import pandas as pd
 from DataLoader import MovieDataset
-# from LSTM import LSTMModel
+from LSTM import LSTMModel
 from GloveEmbed import _get_embedding
 import time
 
@@ -110,7 +110,7 @@ def main():
     ## then import model from LSTM.py below
     ## and also load model to device
     ## -----------------------------------------------
-    model = LSTM(vocab_size, output_size, embedding_dim, embedding_matrix,\
+    model = LSTMModel(vocab_size, output_size, embedding_dim, embedding_matrix,\
         hidden_dim, n_layers, input_len, pretrain)
     model.to(device)
 
@@ -139,8 +139,10 @@ def main():
     print('*'*89)
     if mode == 'train':
         model.train()
+        global_step = 0
         for epoches in range(num_epoches):
             for x_batch, y_labels in training_generator:
+                global_step += 1
                 
                 x_batch, y_labels = x_batch.to(device), y_labels.to(device)
                 ##-----------------------------------------------
@@ -164,7 +166,7 @@ def main():
             ## step 9: complete code below to save checkpoint
             ##-----------------------------------------------
             print("**** save checkpoint ****")
-            _save_checkpoint('checkpoints/' + 'epoch_{}.pt'.format(epoches), model, epoches, global_step, optimizer)
+            _save_checkpoint('checkpoints/' + 'epoch_{}.pt'.format(epoches+1), model, epoches, global_step, optimizer)
             
     
     ##------------------------------------------------------------------
@@ -187,8 +189,8 @@ def main():
             
             # count total predictions and correct predictions
             total += len(y_labels)
-			correct += len(y_pred) - (y_batch-y_pred).count_nonzero()
-		print("Testing Accuracy:", accy_count/total)
+            correct += len(y_pred) - (y_labels-y_pred).count_nonzero().item()
+        print("Testing Accuracy:", correct/total)
     
 
 

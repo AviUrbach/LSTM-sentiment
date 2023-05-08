@@ -27,7 +27,7 @@ def _data_preprocessing(input_data):
     ##----------------------------------------------------
     ## complete code below to convert words to lower case
     ##----------------------------------------------------
-    input_data['clean_text'] = input_data['clean_text'].lower()
+    input_data['clean_text'] = input_data['clean_text'].map(lambda x: x.lower())
 
     return input_data
 

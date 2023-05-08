@@ -6,3 +6,4 @@
 /Glove/
 *.pt
 checkpoint/
+__pycache__/
