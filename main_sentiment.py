@@ -110,15 +110,16 @@ def main():
     ## then import model from LSTM.py below
     ## and also load model to device
     ## -----------------------------------------------
-    model = LSTM(xxx,xxx)
-    model.to()
+    model = LSTM(vocab_size, output_size, embedding_dim, embedding_matrix,\
+        hidden_dim, n_layers, input_len, pretrain)
+    model.to(device)
 
     ##-----------------------------------------------------------
     ## step 5: complete code to define optimizer and loss function
     ##-----------------------------------------------------------
-    optimizer = optim.Adam(,lr=learning_rate)  # 
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)  # 
     ## define Binary Cross Entropy Loss below
-    loss_fun = 
+    loss_fun = nn.BCELoss()
     
     ## step 6: load checkpoint
     if load_cpt:
@@ -126,7 +127,10 @@ def main():
         ##-----------------------------------------------   
         ## complete code below to load checkpoint
         ##-----------------------------------------------
-        
+        checkpoint = torch.load(ckp_path)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        epoches = checkpoint['epoch']
 
 
     ## step 7: model training
@@ -142,12 +146,12 @@ def main():
                 ##-----------------------------------------------
                 ## complete code to get predict result from model
                 ##-----------------------------------------------
-                y_out = 
+                y_out = model(x_batch)
 
                 ##-----------------------------------------------
                 ## complete code to get loss
                 ##-----------------------------------------------
-                loss = 
+                loss = loss_fun(y_out, y_labels)
 
                 ## step 8: back propagation [Done]
                 optimizer.zero_grad()
@@ -160,6 +164,7 @@ def main():
             ## step 9: complete code below to save checkpoint
             ##-----------------------------------------------
             print("**** save checkpoint ****")
+            _save_checkpoint('checkpoints/' + 'epoch_{}.pt'.format(epoches), model, epoches, global_step, optimizer)
             
     
     ##------------------------------------------------------------------
@@ -168,7 +173,22 @@ def main():
     ## we can use y_pred = torch.round(y_out) to predict label 1 or 0
     ##------------------------------------------------------------------
     print("----model testing now----")
-    
+
+    total = 0
+    correct = 0
+
+    model.eval()
+    with torch.no_grad():
+        for x_batch, y_labels in test_generator:
+            x_batch, y_labels = x_batch.to(device), y_labels.to(device)
+            
+            y_out = model(x_batch)
+            y_pred = torch.round(y_out)
+            
+            # count total predictions and correct predictions
+            total += len(y_labels)
+			correct += len(y_pred) - (y_batch-y_pred).count_nonzero()
+		print("Testing Accuracy:", accy_count/total)
     
 
 
